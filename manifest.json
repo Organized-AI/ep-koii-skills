@@ -1,0 +1,12 @@
+{
+  "name": "EP-133 K.O. II Skill",
+  "id": "ep-koii-skill",
+  "version": "1.0.0",
+  "author": "Organized-AI",
+  "description": "Unified skill for controlling the Teenage Engineering EP-133 K.O. II with MIDI and sample management",
+  "license": "MIT",
+  "capabilities": {
+    "midi_control": "Full MIDI control over EP-133 K.O. II",
+    "sample_browser": "240+ sounds across 6 categories"
+  }
+}
