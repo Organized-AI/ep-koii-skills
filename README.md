@@ -48,6 +48,7 @@ kicks = skill.list_sounds_in_category("Kicks")
 ## Documentation
 
 - **Time-Based Generator**: See [TIME_GENERATOR.md](TIME_GENERATOR.md) for composition guide
+- **Sound Compatibility**: See [SOUND_COMPATIBILITY.md](SOUND_COMPATIBILITY.md) for analyzer details
 - **Quick Start**: See [QUICKSTART.md](QUICKSTART.md) for getting started
 - **API Reference**: See docstrings in skill.py
 

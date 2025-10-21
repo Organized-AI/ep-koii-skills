@@ -7,9 +7,10 @@ Quickly compose musical ideas based on clock time or bar segments and export the
 The Time-Based Idea Generator helps you get ideas onto the sampler quickly by:
 - **Clock Mode**: Generates unique beats based on the current time (HH:MM:SS)
 - **Bar Mode**: Generates beats based on musical bar/measure numbers
+- **Sound Compatibility Analysis**: Automatically checks if sounds work well together
 - **Instant Export**: Send compositions directly to the sampler via USB-C MIDI
 
-Each time or bar number creates a deterministic, reproducible composition, making it easy to iterate and return to ideas.
+Each time or bar number creates a deterministic, reproducible composition, making it easy to iterate and return to ideas. Every composition is automatically analyzed for sound compatibility before export!
 
 ## Quick Start
 
@@ -82,6 +83,52 @@ Generated compositions include:
 - Claps, toms, and other percussion
 - Sporadic placement
 - 3 percussion variants
+
+## Sound Compatibility Analysis
+
+Every composition is automatically analyzed to ensure sounds work well together! The analyzer checks:
+
+### What's Analyzed
+
+1. **Sound Families**: Checks if sounds come from compatible families (NT, MICRO, S95X, etc.)
+2. **Category Balance**: Ensures proper mix of kicks, snares, hats
+3. **Timbre Compatibility**: Analyzes warmth, brightness, and tonal characteristics
+4. **Style Kit Matching**: Identifies which pre-defined kit your sounds match
+
+### Compatibility Ratings
+
+- **EXCELLENT (85-100%)**: Sounds work very well together - export confidently!
+- **GOOD (70-84%)**: Good compatibility - should sound cohesive
+- **ACCEPTABLE (55-69%)**: May work, consider refining sound selection
+- **NEEDS IMPROVEMENT (<55%)**: Consider different sound combinations
+
+### Example Output
+
+```
+🎵 SOUND COMPATIBILITY ANALYSIS
+--------------------------------------------------------
+Rating:      EXCELLENT (99%)
+Verdict:     These sounds will work very well together!
+Style Kit:   Natural Kit
+
+Sound Details:
+  • NT KICK (NT family, warm timbre: acoustic, low-frequency, organic)
+  • NT SNARE (NT family, warm timbre: acoustic, natural, organic)
+  • NT HH CLOSED B (NT family, warm timbre: high-frequency, natural, organic)
+
+Families:    NT
+Timbres:     warm
+```
+
+### Why This Matters
+
+Before exporting to your sampler, you can:
+- **Verify coherence**: Ensure sounds will blend well musically
+- **Identify issues**: Catch incompatible sound combinations early
+- **Learn patterns**: Understand which sound families work together
+- **Save time**: Avoid exporting beats that won't sound good
+
+For detailed information, see [SOUND_COMPATIBILITY.md](SOUND_COMPATIBILITY.md).
 
 ## Musical Parameters
 

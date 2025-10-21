@@ -10,6 +10,7 @@ from typing import List, Dict, Tuple, Optional
 import random
 
 from ep_koii_skills import EP133Skill
+from sound_compatibility import SoundCompatibilityAnalyzer
 
 
 class TimeBasedGenerator:
@@ -17,6 +18,7 @@ class TimeBasedGenerator:
 
     def __init__(self):
         self.skill = EP133Skill()
+        self.compatibility_analyzer = SoundCompatibilityAnalyzer()
 
         # Musical parameters
         self.bpm = 120
@@ -105,6 +107,10 @@ class TimeBasedGenerator:
                 'perc': perc_pattern
             }
         }
+
+        # Analyze sound compatibility
+        compatibility = self._analyze_sound_compatibility(composition)
+        composition['compatibility'] = compatibility
 
         # Store current composition
         self.current_composition = composition
@@ -201,7 +207,7 @@ class TimeBasedGenerator:
                     'step': step,
                     'note': 42 if not is_open else 46,  # Closed vs Open hat
                     'velocity': velocity,
-                    'sound_id': 201 if not is_open else 202  # HH variants
+                    'sound_id': random.choice([200, 201]) if not is_open else 218  # HH variants
                 })
             # Add occasional accents based on density
             elif random.random() < density * 0.3:
@@ -210,7 +216,7 @@ class TimeBasedGenerator:
                     'step': step,
                     'note': 42,
                     'velocity': velocity,
-                    'sound_id': 201
+                    'sound_id': random.choice([200, 201])
                 })
 
         return pattern
@@ -237,10 +243,47 @@ class TimeBasedGenerator:
 
         return pattern
 
+    def _analyze_sound_compatibility(self, composition: Dict) -> Dict:
+        """Analyze the sound compatibility of the composition."""
+        # Extract all sound IDs from the composition
+        sound_ids = []
+        for pattern_name, pattern_events in composition['patterns'].items():
+            for event in pattern_events:
+                if 'sound_id' in event:
+                    sound_ids.append(event['sound_id'])
+
+        # Remove duplicates
+        unique_sound_ids = list(set(sound_ids))
+
+        # Analyze compatibility
+        if not unique_sound_ids:
+            return {
+                "analyzed": False,
+                "reason": "No sounds in composition"
+            }
+
+        analysis = self.compatibility_analyzer.analyze_composition(unique_sound_ids)
+
+        # Add sound details
+        analysis['sounds_used'] = []
+        for sid in sorted(unique_sound_ids):
+            summary = self.compatibility_analyzer.get_sound_summary(sid)
+            analysis['sounds_used'].append({
+                'id': sid,
+                'summary': summary
+            })
+
+        # Find matching kit
+        matching_kit = self.compatibility_analyzer.find_matching_kit(unique_sound_ids)
+        analysis['matching_kit'] = matching_kit
+
+        return analysis
+
     def _print_composition_summary(self, composition: Dict):
         """Print a readable summary of the composition."""
         meta = composition['metadata']
         patterns = composition['patterns']
+        compatibility = composition.get('compatibility', {})
 
         print(f"\n{'='*60}")
         print(f"  COMPOSITION SUMMARY")
@@ -261,6 +304,32 @@ class TimeBasedGenerator:
         print(f"    • Hi-hats:    {len(patterns['hat'])} hits")
         print(f"    • Percussion: {len(patterns['perc'])} hits")
         print(f"  Total Events: {sum(len(p) for p in patterns.values())}")
+
+        # Print sound compatibility analysis
+        if compatibility and 'overall_score' in compatibility:
+            print(f"\n  🎵 SOUND COMPATIBILITY ANALYSIS")
+            print(f"  {'-'*56}")
+            print(f"  Rating:      {compatibility['rating']} ({compatibility['overall_score']:.0%})")
+            print(f"  Verdict:     {compatibility['verdict']}")
+
+            if compatibility.get('matching_kit'):
+                print(f"  Style Kit:   {compatibility['matching_kit']}")
+
+            print(f"\n  Sound Details:")
+            for sound_info in compatibility.get('sounds_used', []):
+                print(f"    • {sound_info['summary']}")
+
+            # Show key insights
+            family_check = compatibility.get('family_analysis', {})
+            if family_check.get('families'):
+                families_str = ', '.join(family_check['families'])
+                print(f"\n  Families:    {families_str}")
+
+            timbre_check = compatibility.get('timbre_analysis', {})
+            if timbre_check.get('timbres'):
+                timbres_str = ', '.join(timbre_check['timbres'])
+                print(f"  Timbres:     {timbres_str}")
+
         print(f"{'='*60}\n")
 
     def export_to_sampler(self, composition: Optional[Dict] = None) -> bool:
