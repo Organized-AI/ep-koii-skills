@@ -5,6 +5,8 @@ A unified skill for controlling the Teenage Engineering EP-133 K.O. II synthesiz
 ## Features
 
 - **MIDI Control**: Connect to EP-133 K.O. II via USB and play notes
+- **Time-Based Idea Generator**: Compose beats from clock time or bar numbers
+- **Quick Export**: Send compositions directly to sampler via USB-C
 - **Sound Browser**: Browse 240+ sounds organized in 6 categories
 - **Pattern Sequencing**: Create and play drum patterns
 - **Sound Search**: Search for sounds by name and category
@@ -17,6 +19,19 @@ pip install -e .
 ```
 
 ## Quick Start
+
+### Generate Ideas Fast
+
+```bash
+# Use slash commands for instant composition
+/koii-time   # Generate from current time and export to sampler
+/koii-bar    # Generate from bar number and export to sampler
+
+# Or use the interactive generator
+python time_based_generator.py
+```
+
+### Manual MIDI Control
 
 ```python
 from ep_koii_skills import EP133Skill
@@ -32,8 +47,8 @@ kicks = skill.list_sounds_in_category("Kicks")
 
 ## Documentation
 
-- **Full README**: See main documentation
-- **Examples**: Check examples.py for 8 working examples
+- **Time-Based Generator**: See [TIME_GENERATOR.md](TIME_GENERATOR.md) for composition guide
+- **Quick Start**: See [QUICKSTART.md](QUICKSTART.md) for getting started
 - **API Reference**: See docstrings in skill.py
 
 ## Sound Library
