@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EP-133 K.O. II Sample Tool</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            background: #E5E5E5;
+            color: #333;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            background: #FF5722;
+            color: white;
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+
+        .tool-name {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 0 30px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            background: #FF5722;
+            color: white;
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Device Visualization */
+        .device-panel {
+            position: relative;
+        }
+
+        .device-container {
+            background: #D8D8D8;
+            border: 2px solid #999;
+            padding: 30px;
+            margin: 20px;
+            position: relative;
+        }
+
+        .device-label {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .device-screen {
+            background: #000;
+            height: 80px;
+            margin-bottom: 20px;
+            border: 2px solid #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        .device-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .knob {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            border: 3px solid #666;
+            position: relative;
+        }
+
+        .knob.orange {
+            background: #FF5722;
+            border-color: #FF5722;
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 10px;
+            background: white;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .device-button {
+            aspect-ratio: 1;
+            background: #333;
+            border: 2px solid #555;
+            cursor: pointer;
+            transition: all 0.05s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .device-button.white {
+            background: #f5f5f5;
+            border-color: #ccc;
+            color: rgba(0,0,0,0.3);
+        }
+
+        .device-button.orange {
+            background: #FF5722;
+            border-color: #FF5722;
+            color: white;
+        }
+
+        .device-button:hover {
+            transform: scale(0.95);
+        }
+
+        .device-button:active, .device-button.active {
+            transform: scale(0.9);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .device-button.playing {
+            box-shadow: 0 0 0 3px #FF5722;
+        }
+
+        /* Connection Panel */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.connected {
+            background: #4CAF50;
+        }
+
+        .btn {
+            background: #FF5722;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #E64A19;
+        }
+
+        .btn:active {
+            background: #D84315;
+        }
+
+        .btn.secondary {
+            background: #666;
+        }
+
+        .btn.secondary:hover {
+            background: #555;
+        }
+
+        /* Sample Library */
+        .sample-search {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .sample-search:focus {
+            outline: none;
+            border-color: #FF5722;
+        }
+
+        .sample-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .sample-category {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .category-header {
+            background: #f5f5f5;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .category-header:hover {
+            background: #eee;
+        }
+
+        .category-items {
+            display: none;
+        }
+
+        .category-items.expanded {
+            display: block;
+        }
+
+        .sample-item {
+            padding: 8px 15px 8px 30px;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sample-item:hover {
+            background: #f9f9f9;
+        }
+
+        .sample-item.active {
+            background: #FFF3E0;
+            color: #FF5722;
+        }
+
+        .sample-number {
+            color: #999;
+            font-size: 11px;
+            min-width: 30px;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            color: #FF5722;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #FF5722;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #FF5722;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Sequencer */
+        .sequencer-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 4px;
+            margin: 15px 0;
+        }
+
+        .seq-step {
+            aspect-ratio: 1;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.05s;
+        }
+
+        .seq-step:hover {
+            background: #eee;
+        }
+
+        .seq-step.active {
+            background: #FF5722;
+            border-color: #FF5722;
+        }
+
+        .seq-step.playing {
+            box-shadow: 0 0 0 2px #333;
+        }
+
+        .sequencer-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .bpm-input {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .bpm-input:focus {
+            outline: none;
+            border-color: #FF5722;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">EP</div>
+        <div class="tool-name">Sample Tool</div>
+    </div>
+
+    <div class="container">
+        <!-- Left Panel - Device -->
+        <div>
+            <div class="panel device-panel">
+                <div class="panel-header">EP-133 K.O. II</div>
+                <div class="panel-content">
+                    <div class="device-container">
+                        <div class="device-label">K.O. II</div>
+                        <div class="device-screen" id="deviceScreen">READY</div>
+                        <div class="device-controls">
+                            <div class="knob"></div>
+                            <div class="knob orange"></div>
+                            <div class="knob"></div>
+                        </div>
+                        <div class="button-grid" id="buttonGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Panel -->
+            <div class="panel">
+                <div class="panel-header">Connection</div>
+                <div class="panel-content">
+                    <div class="connection-status">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">Disconnected</span>
+                    </div>
+                    <button class="btn" id="connectBtn" onclick="connect()">Connect Device</button>
+                    <button class="btn secondary" id="disconnectBtn" onclick="disconnect()" style="display: none; margin-left: 10px;">Disconnect</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Controls and Library -->
+        <div>
+            <!-- Sample Library -->
+            <div class="panel">
+                <div class="panel-header">Sample Library</div>
+                <div class="panel-content">
+                    <input type="text" class="sample-search" placeholder="Search sounds..." oninput="searchSounds(this.value)">
+                    <div class="sample-list" id="sampleList"></div>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="panel" style="margin-top: 30px;">
+                <div class="panel-header">Playback Controls</div>
+                <div class="panel-content">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Velocity</span>
+                            <span class="control-value" id="velocityValue">100</span>
+                        </div>
+                        <input type="range" id="velocitySlider" min="0" max="127" value="100" oninput="updateVelocity(this.value)">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Duration (ms)</span>
+                            <span class="control-value" id="durationValue">100</span>
+                        </div>
+                        <input type="range" id="durationSlider" min="50" max="2000" value="100" step="50" oninput="updateDuration(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sequencer -->
+            <div class="panel" style="margin-top: 30px;">
+                <div class="panel-header">Pattern Sequencer</div>
+                <div class="panel-content">
+                    <div class="sequencer-grid" id="sequencerGrid"></div>
+                    <div class="sequencer-controls">
+                        <button class="btn" onclick="playPattern()">Play</button>
+                        <button class="btn secondary" onclick="stopPattern()">Stop</button>
+                        <button class="btn secondary" onclick="clearPattern()">Clear</button>
+                        <label style="font-size: 11px; text-transform: uppercase; color: #666; margin-left: 10px;">BPM:</label>
+                        <input type="number" class="bpm-input" id="bpmInput" value="120" min="60" max="200">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let connected = false;
+        let velocity = 100;
+        let duration = 100;
+        let selectedPad = null;
+        let pattern = Array(16).fill().map(() => []);
+        let expandedCategories = new Set();
+
+        // Pad configuration - 48 pads (4 groups × 12)
+        const padGroups = [
+            { name: 'A', start: 36, buttons: 12 },
+            { name: 'B', start: 48, buttons: 12 },
+            { name: 'C', start: 60, buttons: 12 },
+            { name: 'D', start: 72, buttons: 12 }
+        ];
+
+        function init() {
+            createButtonGrid();
+            createSequencer();
+            loadSampleLibrary();
+            checkStatus();
+        }
+
+        function createButtonGrid() {
+            const grid = document.getElementById('buttonGrid');
+            let buttonIndex = 0;
+
+            padGroups.forEach(group => {
+                for (let i = 0; i < group.buttons; i++) {
+                    const button = document.createElement('div');
+                    const note = group.start + i;
+                    const padId = `${group.name}${i + 1}`;
+
+                    // Styling pattern: some white, some orange, mostly dark
+                    let buttonClass = 'device-button';
+                    if (buttonIndex % 17 === 0) {
+                        buttonClass += ' orange';
+                    } else if (buttonIndex % 7 === 0 || buttonIndex % 11 === 0) {
+                        buttonClass += ' white';
+                    }
+
+                    button.className = buttonClass;
+                    button.dataset.note = note;
+                    button.dataset.padId = padId;
+                    button.textContent = padId;
+                    button.addEventListener('click', () => playPad(note, padId, button));
+
+                    grid.appendChild(button);
+                    buttonIndex++;
+                }
+            });
+        }
+
+        function createSequencer() {
+            const grid = document.getElementById('sequencerGrid');
+            for (let i = 0; i < 16; i++) {
+                const step = document.createElement('div');
+                step.className = 'seq-step';
+                step.dataset.step = i;
+                step.addEventListener('click', () => toggleStep(i));
+                grid.appendChild(step);
+            }
+        }
+
+        function playPad(note, padId, buttonElement) {
+            if (!connected) {
+                alert('Please connect to the device first');
+                return;
+            }
+
+            selectedPad = note;
+
+            // Visual feedback
+            document.querySelectorAll('.device-button').forEach(b => b.classList.remove('active'));
+            buttonElement.classList.add('active');
+
+            // Update screen
+            document.getElementById('deviceScreen').textContent = `PLAYING ${padId}`;
+
+            socket.emit('play_note', {
+                note: note,
+                velocity: velocity,
+                duration: duration / 1000,
+                pad_id: padId
+            });
+
+            // Reset screen after duration
+            setTimeout(() => {
+                document.getElementById('deviceScreen').textContent = 'READY';
+            }, duration);
+        }
+
+        function toggleStep(stepIndex) {
+            if (!selectedPad) {
+                alert('Please click a pad first to add it to the pattern');
+                return;
+            }
+
+            const step = document.querySelector(`[data-step="${stepIndex}"]`);
+            const padId = document.querySelector(`[data-note="${selectedPad}"]`).dataset.padId;
+
+            if (pattern[stepIndex].length > 0) {
+                pattern[stepIndex] = [];
+                step.classList.remove('active');
+            } else {
+                pattern[stepIndex] = [{
+                    note: parseInt(selectedPad),
+                    velocity: velocity,
+                    pad_id: padId
+                }];
+                step.classList.add('active');
+            }
+        }
+
+        function playPattern() {
+            if (!connected) {
+                alert('Please connect to the device first');
+                return;
+            }
+
+            const bpm = parseInt(document.getElementById('bpmInput').value);
+            socket.emit('play_pattern', {
+                pattern: pattern,
+                bpm: bpm,
+                loop: false
+            });
+        }
+
+        function stopPattern() {
+            socket.emit('stop_pattern');
+        }
+
+        function clearPattern() {
+            pattern = Array(16).fill().map(() => []);
+            document.querySelectorAll('.seq-step').forEach(step => {
+                step.classList.remove('active');
+            });
+        }
+
+        async function connect() {
+            try {
+                const response = await fetch('/api/midi/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    updateConnectionStatus(true);
+                    document.getElementById('deviceScreen').textContent = 'CONNECTED';
+                } else {
+                    alert('Connection failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Connection error: ' + error);
+            }
+        }
+
+        async function disconnect() {
+            try {
+                const response = await fetch('/api/midi/disconnect', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    updateConnectionStatus(false);
+                    document.getElementById('deviceScreen').textContent = 'DISCONNECTED';
+                }
+            } catch (error) {
+                alert('Disconnect error: ' + error);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/midi/status');
+                const data = await response.json();
+                updateConnectionStatus(data.connected);
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        function updateConnectionStatus(isConnected) {
+            connected = isConnected;
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+
+            if (isConnected) {
+                dot.classList.add('connected');
+                statusText.textContent = 'Connected';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-block';
+            } else {
+                dot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                connectBtn.style.display = 'inline-block';
+                disconnectBtn.style.display = 'none';
+            }
+        }
+
+        async function loadSampleLibrary() {
+            try {
+                const response = await fetch('/api/samples/categories');
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById('sampleList');
+                    container.innerHTML = '';
+
+                    for (const category of data.categories) {
+                        const categoryDiv = document.createElement('div');
+                        categoryDiv.className = 'sample-category';
+
+                        const header = document.createElement('div');
+                        header.className = 'category-header';
+                        header.textContent = category;
+                        header.onclick = () => toggleCategory(category);
+
+                        const itemsDiv = document.createElement('div');
+                        itemsDiv.className = 'category-items';
+                        itemsDiv.id = `cat-${category}`;
+
+                        categoryDiv.appendChild(header);
+                        categoryDiv.appendChild(itemsDiv);
+                        container.appendChild(categoryDiv);
+
+                        // Load category sounds
+                        loadCategorySounds(category);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load library:', error);
+            }
+        }
+
+        async function loadCategorySounds(category) {
+            try {
+                const response = await fetch(`/api/samples/category/${encodeURIComponent(category)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById(`cat-${category}`);
+
+                    data.sounds.forEach(sound => {
+                        const item = document.createElement('div');
+                        item.className = 'sample-item';
+                        item.innerHTML = `
+                            <span class="sample-number">${sound.id}</span>
+                            <span>${sound.name}</span>
+                        `;
+                        container.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load category:', error);
+            }
+        }
+
+        function toggleCategory(category) {
+            const itemsDiv = document.getElementById(`cat-${category}`);
+            if (expandedCategories.has(category)) {
+                expandedCategories.delete(category);
+                itemsDiv.classList.remove('expanded');
+            } else {
+                expandedCategories.add(category);
+                itemsDiv.classList.add('expanded');
+            }
+        }
+
+        async function searchSounds(query) {
+            if (query.length < 2) {
+                loadSampleLibrary();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/samples/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById('sampleList');
+                    container.innerHTML = '';
+
+                    data.results.forEach(sound => {
+                        const item = document.createElement('div');
+                        item.className = 'sample-item';
+                        item.innerHTML = `
+                            <span class="sample-number">${sound.id}</span>
+                            <span>${sound.name}</span>
+                            <span style="margin-left: auto; font-size: 11px; color: #999;">${sound.category}</span>
+                        `;
+                        container.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                console.error('Search failed:', error);
+            }
+        }
+
+        function updateVelocity(value) {
+            velocity = parseInt(value);
+            document.getElementById('velocityValue').textContent = velocity;
+        }
+
+        function updateDuration(value) {
+            duration = parseInt(value);
+            document.getElementById('durationValue').textContent = duration;
+        }
+
+        // Socket.IO event handlers
+        socket.on('connection_status', (data) => {
+            updateConnectionStatus(data.connected);
+        });
+
+        socket.on('note_playing', (data) => {
+            const button = document.querySelector(`[data-pad-id="${data.pad_id}"]`);
+            if (button) {
+                button.classList.add('playing');
+            }
+        });
+
+        socket.on('note_stopped', (data) => {
+            const button = document.querySelector(`[data-pad-id="${data.pad_id}"]`);
+            if (button) {
+                button.classList.remove('playing');
+            }
+        });
+
+        socket.on('pattern_step', (data) => {
+            const steps = document.querySelectorAll('.seq-step');
+            steps.forEach((step, index) => {
+                if (index === data.step) {
+                    step.classList.add('playing');
+                } else {
+                    step.classList.remove('playing');
+                }
+            });
+        });
+
+        socket.on('pattern_stopped', () => {
+            document.querySelectorAll('.seq-step').forEach(step => {
+                step.classList.remove('playing');
+            });
+        });
+
+        socket.on('error', (data) => {
+            console.error('Socket error:', data.message);
+            document.getElementById('deviceScreen').textContent = 'ERROR';
+            setTimeout(() => {
+                document.getElementById('deviceScreen').textContent = 'READY';
+            }, 2000);
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
