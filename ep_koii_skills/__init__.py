@@ -9,5 +9,7 @@ __license__ = "MIT"
 from .skill import EP133Skill
 from .midi_interface import MIDIInterface
 from .sample_manager import SampleManager
+from .sample_pack_organizer import SamplePackOrganizer
+from .usb_monitor import USBConnectionMonitor
 
-__all__ = ["EP133Skill", "MIDIInterface", "SampleManager"]
+__all__ = ["EP133Skill", "MIDIInterface", "SampleManager", "SamplePackOrganizer", "USBConnectionMonitor"]
