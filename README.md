@@ -5,10 +5,12 @@ A unified skill for controlling the Teenage Engineering EP-133 K.O. II synthesiz
 ## Features
 
 - **MIDI Control**: Connect to EP-133 K.O. II via USB and play notes
+- **Web Interface**: Modern browser-based control interface with real-time visualization
 - **Sound Browser**: Browse 240+ sounds organized in 6 categories
-- **Pattern Sequencing**: Create and play drum patterns
+- **Pattern Sequencing**: Create and play drum patterns with 16-step sequencer
 - **Sound Search**: Search for sounds by name and category
 - **Integration**: Works with Claude for natural language control
+- **Real-time Visualization**: Visual feedback for pad triggers and playback
 
 ## Installation
 
@@ -17,6 +19,8 @@ pip install -e .
 ```
 
 ## Quick Start
+
+### Python API
 
 ```python
 from ep_koii_skills import EP133Skill
@@ -29,6 +33,23 @@ skill.play_note("C3", velocity=100, duration=0.5)
 categories = skill.list_sound_categories()
 kicks = skill.list_sounds_in_category("Kicks")
 ```
+
+### Web Interface
+
+Launch the browser-based control interface:
+
+```bash
+python3 web_interface.py
+```
+
+Then open your browser to `http://localhost:5000` for:
+- Visual 48-pad grid interface
+- Real-time playback visualization
+- Sample browser and search
+- 16-step pattern sequencer
+- Velocity and duration controls
+
+See [WEB_INTERFACE.md](WEB_INTERFACE.md) for complete documentation.
 
 ## Documentation
 
